@@ -1,0 +1,115 @@
+/* ── Fonts: IBM Plex family — has matching Devanagari companions, and Mono
+   gives every rupee figure a proper tabular "ledger column" feel. ── */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Devanagari:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #f3ecda;
+  --color-paper-card: #fffcf5;
+  --color-ink: #21242b;
+  --color-ink-soft: #5c5f66;
+  --color-rule-red: #9b3a2e;
+  --color-rule-blue: #7c8aa3;
+  --color-brass: #8f6b1f;
+  --color-brass-light: #b08a32;
+  --color-stamp: #29614a;
+  --color-stamp-light: #e8f0ea;
+
+  --font-display: "IBM Plex Serif", "IBM Plex Sans Devanagari", serif;
+  --font-display-hi: "IBM Plex Sans Devanagari", "IBM Plex Serif", serif;
+  --font-body: "IBM Plex Sans", "IBM Plex Sans Devanagari", system-ui, sans-serif;
+  --font-ledger: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-ink);
+  background-color: var(--color-paper);
+  /* Ledger-paper texture: faint horizontal rule lines + a red margin line,
+     just like an Indian accounts khata / cash-book page. */
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 31px,
+      color-mix(in srgb, var(--color-rule-blue) 28%, transparent) 31px,
+      color-mix(in srgb, var(--color-rule-blue) 28%, transparent) 32px
+    ),
+    linear-gradient(
+      to right,
+      transparent 0,
+      transparent 38px,
+      color-mix(in srgb, var(--color-rule-red) 45%, transparent) 38px,
+      color-mix(in srgb, var(--color-rule-red) 45%, transparent) 39px,
+      transparent 39px
+    );
+  background-attachment: fixed;
+}
+
+@media (max-width: 640px) {
+  body {
+    background-image:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 27px,
+        color-mix(in srgb, var(--color-rule-blue) 24%, transparent) 27px,
+        color-mix(in srgb, var(--color-rule-blue) 24%, transparent) 28px
+      ),
+      linear-gradient(
+        to right,
+        transparent 0,
+        transparent 18px,
+        color-mix(in srgb, var(--color-rule-red) 40%, transparent) 18px,
+        color-mix(in srgb, var(--color-rule-red) 40%, transparent) 19px,
+        transparent 19px
+      );
+  }
+}
+
+[lang="hi"] .font-display {
+  font-family: var(--font-display-hi);
+}
+
+.ledger-num {
+  font-family: var(--font-ledger);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Wax-seal stamp — the page's one signature flourish. */
+.ledger-stamp {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 3px double var(--color-stamp);
+  border-radius: 9999px;
+  color: var(--color-stamp);
+  transform: rotate(-4deg);
+  background: var(--color-stamp-light);
+}
+
+.ledger-card {
+  background: var(--color-paper-card);
+  border-top: 3px solid var(--color-rule-red);
+  box-shadow: 0 1px 2px rgba(33, 24, 10, 0.06), 0 8px 24px -12px rgba(33, 24, 10, 0.25);
+}
+
+.ledger-divider {
+  height: 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-rule-red) 55%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-rule-red) 18%, transparent);
+}
+
+/* Reduced motion respect */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
