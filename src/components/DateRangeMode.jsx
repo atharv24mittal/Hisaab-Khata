@@ -13,7 +13,7 @@ import { fromISODateInput, toISODateInput, todayMidnight } from "../utils/dateUt
 export default function DateRangeMode() {
   const { t } = useLang();
 
-  const [principal, setPrincipal] = useState("10000");
+  const [principal, setPrincipal] = useState("");
   const [rateChoice, setRateChoice] = useState("2.25");
   const [manualRate, setManualRate] = useState("");
   const [startDate, setStartDate] = useState("");
