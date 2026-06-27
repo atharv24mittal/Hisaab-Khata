@@ -9,7 +9,7 @@ const LanguageContext = createContext(null);
 export function LanguageProvider({ children }) {
   const [lang, setLang] = useState(() => {
     const saved = typeof window !== "undefined" ? window.localStorage?.getItem("hk-lang") : null;
-    return saved === "hi" || saved === "en" ? saved : "en";
+    return saved === "hi" || saved === "en" ? saved : "hi";
   });
 
   const setLanguage = (next) => {
