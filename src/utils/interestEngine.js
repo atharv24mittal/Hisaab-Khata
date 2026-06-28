@@ -152,6 +152,7 @@ export function calculateLoan({ startDate, endDate, principal, ratePercent, paym
       entry.closingPrincipal = currentPrincipal;
       totalPaid += pay.amount;
       segmentStart = nextDate;
+      yearAnchor = nextDate;
       paymentIdx++;
     } else {
       // final boundary
