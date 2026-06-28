@@ -3,18 +3,19 @@
 //
 // Rules implemented (per spec):
 //  1. Interest = principal × (monthlyRate / 100) × days / 30   (flat 30-day month)
-//  2. Minimum 15 days interest is always charged for any accrual segment
-//     that has elapsed time > 0 (a segment with exactly 0 elapsed days,
-//     e.g. a payment landing on the same day as a compounding fold,
-//     charges no extra interest).
+//  2. Minimum 15 days interest is charged for any gap between real-world
+//     events (loan start → payment → ... → final date) that is shorter
+//     than 15 days. This is evaluated against the REAL gap since the last
+//     actual transaction — a 365-day compounding fold landing in between
+//     is just internal bookkeeping and never creates or erases this floor
+//     on its own.
 //  3. Every 365 days (from the loan start date, or from the most recent
-//     compounding fold — NOT reset by partial payments), the interest
-//     accrued over that 365-day block is folded into the principal
-//     ("compound interest after 1 year"). The new, larger principal is
-//     used for every subsequent day's interest.
+//     compounding fold or payment), the interest accrued over that block
+//     is folded into the principal ("compound interest after 1 year").
+//     The new, larger principal is used for every subsequent day's interest.
 //  4. Partial payments (Mode 2 / EMI tracker) settle interest accrued up
 //     to the payment date, then reduce the principal by the payment
-//     amount. They do NOT reset the 365-day compounding clock.
+//     amount, and restart the 365-day compounding clock from that date.
 //
 // The engine produces a full chronological "timeline" of every accrual
 // segment (fold / payment / final) so the UI can show a complete,
@@ -85,7 +86,8 @@ export function calculateLoan({ startDate, endDate, principal, ratePercent, paym
 
   let currentPrincipal = origPrincipal;
   let segmentStart = start;
-  let yearAnchor = start; // resets only on a compounding fold, never on a payment
+  let yearAnchor = start; // resets on a compounding fold AND on a payment
+  let lastRealEventDate = start; // resets ONLY on a real-world event (start/payment), never on a fold
   let paymentIdx = 0;
 
   const timeline = [];
@@ -112,8 +114,36 @@ export function calculateLoan({ startDate, endDate, principal, ratePercent, paym
     const isFinal = nextDate.getTime() === end.getTime();
 
     const rawDays = daysBetween(segmentStart, nextDate);
-    const effectiveDays = rawDays === 0 ? 0 : Math.max(rawDays, MIN_DAYS);
-    const minApplied = rawDays > 0 && rawDays < MIN_DAYS;
+
+    // The 15-day minimum is a real-world rule: it only makes sense measured
+    // against the gap since the last REAL event (loan start or a payment).
+    // A compounding fold is just an internal bookkeeping checkpoint, not
+    // something that happened in the real world, so a short sliver of days
+    // immediately after a fold must never be padded on its own — what
+    // matters is the total real gap since the last actual transaction.
+    let effectiveDays;
+    let minApplied;
+    if (isFold) {
+      // Folds always land exactly 365 days after the last anchor reset —
+      // never short, so they're never subject to the floor.
+      effectiveDays = rawDays;
+      minApplied = false;
+    } else {
+      const daysSinceRealEvent = daysBetween(lastRealEventDate, nextDate);
+      if (daysSinceRealEvent > 0 && daysSinceRealEvent < MIN_DAYS) {
+        // No fold could have occurred inside this short real gap (a fold
+        // needs a full 365 days from the last reset), so this piece's own
+        // rawDays already equals the full real gap — pad it to 15.
+        effectiveDays = MIN_DAYS;
+        minApplied = true;
+      } else {
+        // The real gap is already 15+ days (possibly because one or more
+        // folds already consumed most of it) — charge this piece's own
+        // actual days, with no artificial padding.
+        effectiveDays = rawDays;
+        minApplied = false;
+      }
+    }
 
     const interest = currentPrincipal * (ratePercent / 100) * (effectiveDays / 30);
     const openingPrincipal = currentPrincipal;
@@ -146,19 +176,22 @@ export function calculateLoan({ startDate, endDate, principal, ratePercent, paym
       entry.closingPrincipal = currentPrincipal;
       yearAnchor = nextDate;
       segmentStart = nextDate;
+      // lastRealEventDate deliberately NOT updated — a fold isn't a real event.
     } else if (isPayment) {
       const pay = sortedPayments[paymentIdx];
       currentPrincipal = closingBeforeAdjustment - pay.amount;
       entry.closingPrincipal = currentPrincipal;
       totalPaid += pay.amount;
       segmentStart = nextDate;
-      yearAnchor = nextDate;
+      yearAnchor = nextDate; // compounding clock restarts from this payment date
+      lastRealEventDate = nextDate; // this payment is the new reference point for the 15-day rule
       paymentIdx++;
     } else {
       // final boundary
       currentPrincipal = closingBeforeAdjustment;
       entry.closingPrincipal = currentPrincipal;
       segmentStart = nextDate;
+      lastRealEventDate = nextDate;
     }
 
     timeline.push(entry);
