@@ -57,7 +57,7 @@ export const en = {
   // ── Info / help ──
   howItWorksTitle: "How this is calculated",
   howItWorksBody:
-    "Interest = Principal × Rate × Days ÷ 30 (a flat 30-day month). Any period under 15 days is still charged for a minimum of 15 days. If a loan runs for more than 365 days, the interest earned in each 365-day block is added to the principal before the next block begins (compounding). In the EMI tracker, each payment first settles interest accrued so far, then reduces the principal — the 365-day compounding clock keeps running from the original start date regardless of payments.",
+    "Interest = Interest = Principal × Rate × Days ÷ 30 (a flat 30-day month). Any period under 15 days is still charged for a minimum of 15 days. If a loan runs for more than 365 days, the interest earned in each 365-day block is added to the principal before the next block begins (compounding). In the EMI tracker, each payment first settles interest accrued so far, then reduces the principal — and restarts the 365-day compounding clock from that payment date.",
 
   errEndBeforeStart: "End date must be on or after the start date.",
   errInvalidPrincipal: "Please enter a valid principal amount greater than 0.",
